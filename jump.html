@@ -1,0 +1,116 @@
+<html>
+  <head>
+    <title>mario</title>
+
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.js"
+      integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      body {
+        margin: 0px;
+      }
+      #bg {
+        /* border: 1px solid #000; */
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+      #bg_img {
+        width: 100%;
+        height: 100%;
+      }
+      #mario {
+        bottom: 0px;
+        left: 100px;
+        position: absolute;
+      }
+      #mario_img {
+        width: 100px;
+      }
+      #gunba {
+        bottom: 0px;
+        right: 10px;
+        display: none;
+        position: absolute;
+      }
+      #gb_img {
+        width: 80px;
+      }
+      #laser {
+        right: 0px;
+        bottom: 0px;
+        left: 220px;
+        position: absolute;
+        display: none;
+        overflow: hidden;
+      }
+      #laser_img {
+        height: 100px;
+        width: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="bg">
+      <img src="bg.jpeg" id="bg_img" />
+      <div id="mario"><img src="run.gif" id="mario_img" /></div>
+      <div id="gunba"><img src="gb.gif" id="gb_img" /></div>
+    </div>
+  </body>
+  <script>
+    var isJumping = false;
+    var mario = $("#mario");
+
+    function gunbaStart() {
+      let speed = Math.floor(Math.random() * 1000) + 2000;
+      $("#gunba").show();
+
+      $("#gunba").animate({ left: "0px" }, speed, function () {
+        $("#gunba").css("left", "");
+        $("#gunba").css("right", "10px");
+        $("#gunba").hide();
+        setTimeout(gunbaStart, speed - 1000);
+      });
+    }
+
+    function marioDie() {
+      let leftVal = Number($("#gunba").css("left").replace("px", ""));
+      console.log(leftVal);
+      if (leftVal <= 200 && !isJumping) {
+        alert("마리오 사망");
+      }
+    }
+
+    $(function () {
+      $("body").keydown(function (event) {
+        // console.log(event.keyCode);
+        if (event.keyCode == 32) {
+          if (!isJumping) {
+            isJumping = true;
+            mario
+              .animate(
+                {
+                  bottom: "+=300px",
+                },
+                800
+              )
+              .animate(
+                {
+                  bottom: "-=300px",
+                },
+                800,
+                function () {
+                  isJumping = false;
+                }
+              );
+          }
+        }
+      });
+
+      setTimeout(gunbaStart, 1000);
+      setInterval(marioDie, 10);
+    });
+  </script>
+</html>
