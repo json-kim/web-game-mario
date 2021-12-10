@@ -16,6 +16,8 @@
         width: 100%;
         height: 100%;
         position: relative;
+        overflow: hidden;
+        display: none;
       }
       #bg_img {
         width: 100%;
@@ -27,16 +29,42 @@
         position: absolute;
       }
       #mario_img {
-        width: 100px;
+        width: 80px;
       }
-      #gunba {
+      #gunba1 {
         bottom: 0px;
         right: 10px;
         display: none;
         position: absolute;
       }
-      #gb_img {
-        width: 80px;
+      #gunba2 {
+        bottom: 160px;
+        right: 10px;
+        display: none;
+        position: absolute;
+      }
+      #gunba3 {
+        bottom: 320px;
+        right: 10px;
+        display: none;
+        position: absolute;
+      }
+      #gunba4 {
+        bottom: 480px;
+        right: 10px;
+        display: none;
+        position: absolute;
+      }
+      .gb_img {
+        width: 160px;
+      }
+      #bird {
+        bottom: 40%;
+        right: 10px;
+        position: absolute;
+      }
+      #bird_img {
+        width: 160px;
       }
       #laser {
         right: 0px;
@@ -50,45 +78,317 @@
         height: 100px;
         width: 200px;
       }
+      #killer {
+        display: none;
+        position: absolute;
+        left: -1000px;
+        bottom: 0px;
+      }
+      #killer_img {
+        width: 100px;
+      }
+      #score {
+        position: absolute;
+        top: 100px;
+        left: 50%;
+      }
+      #game_over {
+        position: relative;
+        display: none;
+      }
+      #game_start {
+        position: relative;
+      }
+      #start_img {
+        height: 30%;
+      }
     </style>
   </head>
   <body>
     <div id="bg">
       <img src="bg.jpeg" id="bg_img" />
+      <div id="score">점수: 0</div>
       <div id="mario"><img src="run.gif" id="mario_img" /></div>
-      <div id="gunba"><img src="gb.gif" id="gb_img" /></div>
+      <div id="gunba1"><img src="bird.gif" class="gb_img" /></div>
+      <div id="gunba2"><img src="bird.gif" class="gb_img" /></div>
+      <div id="gunba3"><img src="bird.gif" class="gb_img" /></div>
+      <div id="gunba4"><img src="bird.gif" class="gb_img" /></div>
+      <div id="killer"><img src="ball.gif" id="killer_img" /></div>
+    </div>
+    <div id="game_over">
+      <center>
+        <h1>game over</h1>
+        <button id="replay_btn">다시하기</button>
+      </center>
+    </div>
+    <div id="game_start">
+      <center>
+        <h1>자바스크립트 마리오</h1>
+        <b>개발자 :</b>
+        <input type="text" name="dev_name" id="dev_id" /><br /><br />
+        <img src="run.gif" id="start_img" /><br /><br />
+        <div><button id="start_btn">게임시작</button></div>
+      </center>
     </div>
   </body>
   <script>
-    var isJumping = false;
-    var mario = $("#mario");
+    var score = 0; // 점수
+    var isJump = false; // 점프 동작 여부
+    var isKill = false; // 킬러 동작 여부
+    var isGunbaDown1 = false; // 군바 다운 동작 여부
+    var isGunbaDown2 = false; // 군바 다운 동작 여부
+    var isGunbaDown3 = false; // 군바 다운 동작 여부
+    var isGunbaDown4 = false; // 군바 다운 동작 여부
+    var isMarioDown = false; // 마리오 다운 동작 여부
+    var mario = $("#mario"); // 마리오 셀렉터
+    var gunba1 = $("#gunba1"); // 군바1 셀렉터
+    var gunba2 = $("#gunba2"); // 군바1 셀렉터
+    var gunba3 = $("#gunba3"); // 군바1 셀렉터
+    var gunba4 = $("#gunba4"); // 군바1 셀렉터
+    var killer = $("#killer"); // 킬러 셀렉터
+    var dev_name; // 플레이어 이름
+    var goobaInterval1;
+    var goobaInterval2;
+    var goobaInterval3;
+    var goobaInterval4;
+    var marioInterval1;
+    var marioInterval2;
+    var marioInterval3;
+    var marioInterval4;
 
-    function gunbaStart() {
+    // 군바 동작 시작
+    function gunbaStart(gunba) {
+      // 군바 - 스피드 랜덤
       let speed = Math.floor(Math.random() * 1000) + 2000;
-      $("#gunba").show();
+      // 군바 - 등장
+      gunbaInit(gunba);
+      gunba.show();
 
-      $("#gunba").animate({ left: "0px" }, speed, function () {
-        $("#gunba").css("left", "");
-        $("#gunba").css("right", "10px");
-        $("#gunba").hide();
-        setTimeout(gunbaStart, speed - 1000);
+      // 군바 - 왼쪽 끝으로 이동
+      gunba.animate({ left: "-80px" }, speed, function () {
+        // 점수 - 왼쪽 도착시(마리오 생존) 점수 +100
+        score += 100;
+        setScore();
+
+        // 군바 - 위치 초기화
+        gunbaInit(gunba);
+        gunba.hide();
+
+        // 군바 - 1초 뒤 시작
+        setTimeout(() => gunbaStart(gunba), speed - 1000);
       });
     }
 
-    function marioDie() {
-      let leftVal = Number($("#gunba").css("left").replace("px", ""));
-      console.log(leftVal);
-      if (leftVal <= 200 && !isJumping) {
-        alert("마리오 사망");
+    function gunbaInit(gunba) {
+      gunba.css("left", "");
+      gunba.css("right", "10px");
+    }
+
+    // 킬러 - 동작 시작
+    function killerStart() {
+      // 킬러 - 화면 표시
+      killer.css("left", "100px");
+      killer.show();
+      isKill = true;
+
+      // 킬러 - 오른쪽 끝으로 이동
+      killer.animate({ left: "100%" }, 1000, function () {
+        // 킬러 - 오른쪽 끝 도착 시, 감추고 초기화
+        isKill = false;
+        killer.hide();
+        killer.css("left", "-1000px");
+        changeMario(false);
+      });
+    }
+
+    // 군바 - 다운 체크
+    function gunbaDown(gunba, isGunbaDown) {
+      // 군바, 킬러 - 현재 위치 체크
+      var beat1 = Number(gunba.css("left").replace("px", ""));
+      var beat2 = Number(killer.css("left").replace("px", ""));
+
+      // 군바, 킬러 - 위치 비교하여 충돌 체크
+      if (collision(killer, gunba)) {
+        // 킬러 - 다운 처리, 초기화
+        killer.stop();
+        isKill = false;
+        killer.hide();
+        killer.css("left", "-1000px");
+        changeMario(false);
+
+        // 군바 처리
+        // gunba.stop();
+        // gunba.css("left", "");
+        // gunba.css("right", "10px");
+        // gunba.hide();
+        // setTimeout(gunbaStart, 1000);
+        // score += 150;
+        // setScore();
+
+        // 군바 - 다운중이 아닐 때만 다운 처리
+        if (!isGunbaDown) {
+          isGunbaDown = true;
+
+          // 점수 - 군바 다운 시, 점수 +150
+          score += 150;
+          setScore();
+
+          // 군바 - 기존 동작을 멈추고, 다운 동작
+          gunba
+            .stop()
+            .animate({ bottom: "+=50px" }, 200)
+            .animate({ bottom: "-=50px" }, 200, function () {
+              // 군바 - 다운 동작 종료 시, 위치 초가화
+              gunbaInit(gunba);
+              gunba.hide();
+              // 군바 - 1초 뒤, 시작
+              setTimeout(() => gunbaStart(gunba), 1000);
+              isGunbaDown = false;
+            });
+        }
       }
     }
 
+    // 마리오 - 다운 체크
+    function marioDown(gunba, isGunbaDown) {
+      let isCollision = collision(mario, gunba);
+      // 군바 - 현재 위치 체크
+      let leftVal = Number(gunba.css("left").replace("px", ""));
+
+      // 군바, 마리오 - 군바 위치체크 & 마리오 점프중x & 군바 다운중x 일 때, 마리오 다운 처리
+      if (isCollision && !isGunbaDown) {
+        // 마리오 - 다운중 아닐 때만 처리
+        if (!isMarioDown) {
+          isMarioDown = true;
+
+          // 군바 - 기존 동작을 멈추고 위치 초기화
+          gunba.stop();
+          gunbaInit(gunba);
+          gunba.hide();
+
+          // 마리오 - 다운 동작 수행
+          mario
+            .stop()
+            .animate({ bottom: "+=50px" }, 200)
+            .animate({ bottom: "-200px" }, 200, function () {
+              setTimeout(function () {
+                // 마리오 - 마리오 다운 동작 종료 후 1초 뒤 위치 초기화
+                mario.css("bottom", "0px");
+                changeMario(false);
+
+                gameOver();
+
+                // 점수 - 마리오 다운 시, 0으로 초기화
+                score = 0;
+                setScore();
+
+                isMarioDown = false;
+              }, 1000);
+            });
+        }
+      }
+    }
+
+    function collision(b1, b2) {
+      b1Left = Number(b1.css("left").replace("px", ""));
+      b1Bottom = Number(b1.css("bottom").replace("px", ""));
+      b1Width = Number(b1.css("width").replace("px", ""));
+      b1Height = Number(b1.css("height").replace("px", ""));
+
+      b2Left = Number(b2.css("left").replace("px", "")) + 40;
+      b2Bottom = Number(b2.css("bottom").replace("px", "")) + 40;
+      b2Width = Number($(".gb_img").css("width").replace("px", "")) / 2;
+      b2Height = Number(b2.css("height").replace("px", "")) / 2;
+
+      let widthMatch = b1Left + b1Width > b2Left && b2Left + b2Width > b1Left;
+      let heightMatch =
+        b1Bottom + b1Height > b2Bottom && b2Bottom + b2Height > b1Bottom;
+
+      return widthMatch && heightMatch;
+    }
+
+    // 점수 - 화면에 갱신
+    function setScore() {
+      console.log(score);
+      $("#score").text("점수: " + score);
+    }
+
+    function changeMario(input) {
+      if (input) {
+        $("#mario_img").prop("src", "change.gif");
+        $("#mario_img").css("width", "140px");
+      } else {
+        $("#mario_img").prop("src", "run.gif");
+        $("#mario_img").css("width", "80px");
+      }
+    }
+
+    function gameOver() {
+      clearTimeout();
+      clearInterval(marioInterval1);
+      clearInterval(marioInterval2);
+      clearInterval(marioInterval3);
+      clearInterval(marioInterval4);
+      clearInterval(gunbaInterval1);
+      clearInterval(gunbaInterval2);
+      clearInterval(gunbaInterval3);
+      clearInterval(gunbaInterval4);
+      gunba1.stop();
+      gunba2.stop();
+      gunba3.stop();
+      gunba4.stop();
+      gunbaInit(gunba1);
+      gunbaInit(gunba2);
+      gunbaInit(gunba3);
+      gunbaInit(gunba4);
+      $("#bg").hide();
+      $("#game_over").show();
+    }
+
+    function gameStart() {
+      $("#bg").show();
+      $("#game_over").hide();
+      $("#game_start").hide();
+      gunbaInit(gunba1);
+      gunbaInit(gunba2);
+      gunbaInit(gunba3);
+      gunbaInit(gunba4);
+      // 1초 뒤 군바 시작
+      gunbaStart(gunba1);
+      gunbaStart(gunba2);
+      gunbaStart(gunba3);
+      gunbaStart(gunba4);
+      // 0.01초마다 마리오 다운 체크
+      marioInterval = setInterval(() => marioDown(gunba1), 10);
+      marioInterval = setInterval(() => marioDown(gunba2), 10);
+      marioInterval = setInterval(() => marioDown(gunba3), 10);
+      marioInterval = setInterval(() => marioDown(gunba4), 10);
+      // 0.01초마다 군바 다운 체크
+      gunbaInterval1 = setInterval(() => gunbaDown(gunba1, isGunbaDown1), 10);
+      gunbaInterval2 = setInterval(() => gunbaDown(gunba2, isGunbaDown2), 10);
+      gunbaInterval3 = setInterval(() => gunbaDown(gunba3, isGunbaDown3), 10);
+      gunbaInterval4 = setInterval(() => gunbaDown(gunba4, isGunbaDown4), 10);
+    }
+
     $(function () {
+      $("#replay_btn").click(function () {
+        gameStart();
+      });
+
+      $("#start_btn").click(function () {
+        dev_name = $("#dev_id").val();
+        gameStart();
+      });
+
+      // 입력 - 키보드 입력 시 동작 수행
       $("body").keydown(function (event) {
         // console.log(event.keyCode);
+
+        // 입력 - 스페이스바 키 입력시 마리오 점프
         if (event.keyCode == 32) {
-          if (!isJumping) {
-            isJumping = true;
+          // 마리오 - 점프 중이 아닐 때만 점프
+          if (!isJump && !isMarioDown) {
+            isJump = true;
             mario
               .animate(
                 {
@@ -102,15 +402,19 @@
                 },
                 800,
                 function () {
-                  isJumping = false;
+                  isJump = false;
                 }
               );
           }
+          // 입력 - 엔터 키 입력시 킬러 시작
+        } else if (event.keyCode == 13) {
+          // 킬러 - 킬러가 동작 중이 아닐 때만 시작
+          if (!isKill) {
+            changeMario(true);
+            killerStart();
+          }
         }
       });
-
-      setTimeout(gunbaStart, 1000);
-      setInterval(marioDie, 10);
     });
   </script>
 </html>
